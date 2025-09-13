@@ -7,7 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Pencil, Trash2 } from "lucide-react";
 import { toast } from "react-toastify";
 
@@ -15,7 +21,11 @@ const TodoList = () => {
   const [todos, setTodos] = useState([]);
   const [open, setOpen] = useState(false);
   const [editingTodo, setEditingTodo] = useState(null);
-  const [formData, setFormData] = useState({ title: "", description: "", status: "pending" });
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    status: "pending",
+  });
 
   // Fetch todos
   const getTodos = async () => {
@@ -23,7 +33,7 @@ const TodoList = () => {
       const res = await api.get("/todo");
       setTodos(res.data.todo);
     } catch (error) {
-      console.error("Error in fetching todos: ", error);
+      console.error("Error fetching todos: ", error);
     }
   };
 
@@ -31,12 +41,15 @@ const TodoList = () => {
     getTodos();
   }, []);
 
-  // Toggle status (only frontend)
+  // Toggle status (frontend only)
   const toggleStatus = (id) => {
     setTodos((prevTodos) =>
       prevTodos.map((todo) =>
         todo._id === id
-          ? { ...todo, status: todo.status === "completed" ? "pending" : "completed" }
+          ? {
+              ...todo,
+              status: todo.status === "completed" ? "pending" : "completed",
+            }
           : todo
       )
     );
@@ -57,29 +70,35 @@ const TodoList = () => {
   // Open modal with selected todo
   const handleEdit = (todo) => {
     setEditingTodo(todo);
-    setFormData({ title: todo.title, description: todo.description, status: todo.status });
+    setFormData({
+      title: todo.title,
+      description: todo.description,
+      status: todo.status,
+    });
     setOpen(true);
   };
 
   // Update todo
   const handleUpdate = async () => {
     try {
-      const res = await api.put(`/todo/update/${editingTodo._id}`, formData);
-      toast.success("Todo Updated Successfully!!");
+      await api.put(`/todo/update/${editingTodo._id}`, formData);
+      toast.success("Todo Updated Successfully!");
       setTodos((prev) =>
-        prev.map((t) => (t._id === editingTodo._id ? { ...t, ...formData } : t))
+        prev.map((t) =>
+          t._id === editingTodo._id ? { ...t, ...formData } : t
+        )
       );
       setOpen(false);
       setEditingTodo(null);
     } catch (error) {
       console.error(error);
-      toast.error("Failed to Edit todo");
+      toast.error("Failed to edit todo");
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6">
-      <h1 className="text-3xl font-bold text-gray-800 mb-6 text-center">
+    <div className="min-h-screen bg-slate-50 dark:bg-gray-950 p-6 transition-colors">
+      <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-6 text-center">
         My Todos
       </h1>
 
@@ -94,10 +113,10 @@ const TodoList = () => {
               exit={{ opacity: 0, scale: 0.9 }}
               transition={{ duration: 0.3 }}
             >
-              <Card className="shadow-md rounded-2xl border border-gray-200 hover:shadow-lg transition-all h-full flex flex-col justify-between">
+              <Card className="shadow-md rounded-2xl border border-gray-200 dark:border-gray-800 hover:shadow-xl dark:hover:shadow-indigo-700/40 transition-all h-full flex flex-col justify-between bg-white dark:bg-gray-900">
                 <div>
                   <CardHeader className="flex justify-between items-center">
-                    <CardTitle className="text-lg font-semibold text-gray-800">
+                    <CardTitle className="text-lg font-semibold text-gray-800 dark:text-gray-100">
                       {todo.title}
                     </CardTitle>
                     <Badge
@@ -105,26 +124,26 @@ const TodoList = () => {
                         todo.status === "completed"
                           ? "bg-green-500 hover:bg-green-600"
                           : "bg-yellow-500 hover:bg-yellow-600"
-                      } text-white`}
+                      } text-white capitalize transition-all`}
                     >
                       {todo.status}
                     </Badge>
                   </CardHeader>
 
-                  <CardContent className="text-gray-600 space-y-4">
-                    <p>{todo.description}</p>
+                  <CardContent className="text-gray-600 dark:text-gray-300 space-y-4">
+                    <p className="line-clamp-3">{todo.description}</p>
                   </CardContent>
                 </div>
 
                 {/* Footer with actions */}
-                <div className="flex items-center justify-between p-4 border-t">
+                <div className="flex items-center justify-between p-4 border-t dark:border-gray-700">
                   {/* Status Switch */}
                   <div className="flex items-center gap-2">
                     <Switch
                       checked={todo.status === "completed"}
                       onCheckedChange={() => toggleStatus(todo._id)}
                     />
-                    <span className="text-sm text-gray-500">
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
                       {todo.status === "completed" ? "Completed" : "Pending"}
                     </span>
                   </div>
@@ -159,7 +178,7 @@ const TodoList = () => {
 
       {/* Edit Modal */}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
+        <DialogContent className="bg-white dark:bg-gray-900 dark:text-gray-100">
           <DialogHeader>
             <DialogTitle>Edit Todo</DialogTitle>
           </DialogHeader>
@@ -168,7 +187,9 @@ const TodoList = () => {
             <Input
               placeholder="Title"
               value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, title: e.target.value })
+              }
             />
             <Textarea
               placeholder="Description"
@@ -181,10 +202,13 @@ const TodoList = () => {
               <Switch
                 checked={formData.status === "completed"}
                 onCheckedChange={(checked) =>
-                  setFormData({ ...formData, status: checked ? "completed" : "pending" })
+                  setFormData({
+                    ...formData,
+                    status: checked ? "completed" : "pending",
+                  })
                 }
               />
-              <span className="text-sm text-gray-600">
+              <span className="text-sm text-gray-600 dark:text-gray-400">
                 {formData.status === "completed" ? "Completed" : "Pending"}
               </span>
             </div>
