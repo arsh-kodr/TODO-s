@@ -11,14 +11,19 @@ const todoSchema = new mongoose.Schema({
         required : true
     },
     description : {
-        type : String,
-        required : true
+        type : String
     },
     status : {
         type : String,
         enum : ["pending" , "completed"],
         default : "pending"
-    }
+    }, 
+    subTasks: [
+    {
+      text: String,
+      done: { type: Boolean, default: false },
+    },
+  ],
 }, {
     timestamps : true
 }

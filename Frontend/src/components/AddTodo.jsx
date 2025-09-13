@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { PlusCircle, Loader2 } from "lucide-react";
+import { PlusCircle, Loader2, Bot } from "lucide-react";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router";
 
@@ -23,8 +23,10 @@ const AddTodo = () => {
     title: "",
     description: "",
     status: "",
+    subTasks: [],
   });
   const [loading, setLoading] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -38,22 +40,76 @@ const AddTodo = () => {
     e.preventDefault();
 
     if (!form.title || !form.description || !form.status) {
-      toast.error("⚠️ Please fill all fields before submitting!");
+      toast.error("Please fill all fields before submitting!");
       return;
     }
 
     setLoading(true);
     try {
       const res = await api.post("/todo/create", form);
-      console.log("Todo added:", res.data);
       toast.success("✅ Todo Created Successfully!");
-      setForm({ title: "", description: "", status: "" });
+      setForm({ title: "", description: "", status: "", subTasks: [] });
       navigate("/todos");
     } catch (err) {
       console.error("Error adding todo:", err);
       toast.error("❌ Something went wrong");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Smart AI Input
+  const handleSmartInput = async (e) => {
+    if (e.key === "Enter" && e.target.value.trim()) {
+      setAiLoading(true);
+      try {
+        const res = await api.post("/ai/parse", { input: e.target.value });
+        const todo = res.data.todo;
+
+        setForm({
+          title: todo.title || "",
+          description: todo.recurrence
+            ? `Recurring: ${todo.recurrence}`
+            : "",
+          status: "pending",
+          subTasks: [], // AI parse endpoint doesn’t return subtasks
+        });
+
+        toast.success("AI created todo from natural language!");
+        e.target.value = "";
+      } catch (err) {
+        console.error(err);
+        toast.error("AI could not understand your input");
+      } finally {
+        setAiLoading(false);
+      }
+    }
+  };
+
+  // AI Subtask Generator
+  const handleGenerateSubtasks = async () => {
+    if (!form.title) {
+      toast.error("⚠️ Please enter a title first!");
+      return;
+    }
+
+    setAiLoading(true);
+    try {
+      const res = await api.post("/ai/subtasks", { title: form.title , description : form.description });
+
+      // Normalize subtasks to objects with 'text' and 'done'
+      const cleanSubtasks = (res.data.subtasks || []).map((s) => ({
+        text: s.text,
+        done: false,
+      }));
+
+      setForm((prev) => ({ ...prev, subTasks: cleanSubtasks }));
+      toast.success("AI generated subtasks!");
+    } catch (err) {
+      console.error(err);
+      toast.error("AI could not generate subtasks");
+    } finally {
+      setAiLoading(false);
     }
   };
 
@@ -71,12 +127,31 @@ const AddTodo = () => {
               Add New Task
             </CardTitle>
             <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
-              Create and manage your todos with ease 
+              Create and manage your todos with ease
             </p>
           </CardHeader>
 
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Smart AI Input */}
+              <div className="space-y-2">
+                <Label htmlFor="smartInput">Smart Add (AI)</Label>
+                <Input
+                  type="text"
+                  name="smartInput"
+                  placeholder='E.g. "Remind me to call mom every Sunday at 7PM"'
+                  onKeyDown={handleSmartInput}
+                  disabled={loading || aiLoading}
+                  className="rounded-lg transition-all focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-100"
+                />
+                {aiLoading && (
+                  <p className="text-xs text-indigo-600 dark:text-indigo-400">
+                    <Loader2 className="inline-block animate-spin mr-1" size={12} />
+                    AI is processing...
+                  </p>
+                )}
+              </div>
+
               {/* Title */}
               <div className="space-y-2">
                 <Label htmlFor="title">Title</Label>
@@ -122,6 +197,26 @@ const AddTodo = () => {
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* AI Subtask Generator */}
+              <Button
+                type="button"
+                onClick={handleGenerateSubtasks}
+                disabled={loading || aiLoading}
+                className="w-full py-2 rounded-lg flex items-center justify-center gap-2 text-base font-medium shadow-md bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 transition-all text-white"
+              >
+                {aiLoading ? (
+                  <>
+                    <Loader2 className="animate-spin" size={18} />
+                    Generating Subtasks...
+                  </>
+                ) : (
+                  <>
+                    <Bot size={18} />
+                    Generate Subtasks with AI
+                  </>
+                )}
+              </Button>
 
               {/* Submit */}
               <motion.div whileTap={{ scale: loading ? 1 : 0.95 }}>

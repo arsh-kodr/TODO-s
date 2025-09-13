@@ -2,6 +2,7 @@ const express = require("express");
 const cookieParser = require("cookie-parser");
 const authRoutes = require("./routes/auth.routes");
 const todoRoutes = require("./routes/todo.routes")
+const aiRoutes = require("./routes/ai.routes")
 const cors = require("cors");
 
 const app = express();
@@ -18,5 +19,6 @@ app.use(
 
 app.use("/api/auth", authRoutes);
 app.use("/todo" , todoRoutes);
+app.use("/ai" ,aiRoutes);
 
 module.exports = app;

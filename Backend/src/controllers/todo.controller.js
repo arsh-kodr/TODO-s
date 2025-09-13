@@ -1,7 +1,7 @@
 const todoModel = require("../models/todo.model");
 
 async function createTodo(req, res) {
-  const { title, description, status } = req.body;
+  const { title, description, status, subTasks } = req.body;
 
   const userID = req.user._id;
 
@@ -15,6 +15,7 @@ async function createTodo(req, res) {
     title,
     description,
     status,
+    subTasks: subTasks || [], 
     user: userID,
   });
 
@@ -43,7 +44,7 @@ async function updateTodo(req, res) {
     console.log(req.body);
     
     
-    const {title , description} = req.body;
+    const {title , description } = req.body;
 
     const updatedTodo = await todoModel.findByIdAndUpdate(id,{title , description});
 
