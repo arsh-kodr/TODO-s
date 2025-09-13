@@ -10,9 +10,11 @@ export const AuthProvider = ({ children }) => {
 
   const checkAuth = async () => {
     try {
-      const res = await api.get("/api/auth/me"); // this will send cookies automatically
+      const res = await api.get("/api/auth/me"); 
       setUser(res.data.user);
     } catch (err) {
+      console.log(err);
+      
       setUser(null);
     } finally {
       setLoading(false);
@@ -25,7 +27,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await api.post("/api/auth/logout"); // backend clears cookie
+      await api.post("/api/auth/logout"); 
       setUser(null);
     } catch (err) {
       console.error(err);
